@@ -131,7 +131,7 @@ const ModelPage: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await llmProviderApi.getList()
+      const response: any = await llmProviderApi.getList()
       // response 已经是 PaginatedData 结构，直接访问 items
       setData(response.data?.items || [])
     } catch (error) {

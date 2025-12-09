@@ -3,7 +3,7 @@ import { Form, Input, Button, Card, Typography, message } from 'antd'
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false)

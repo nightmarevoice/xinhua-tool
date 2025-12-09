@@ -130,7 +130,7 @@ const ChatTestPage: React.FC = () => {
       // 使用 workflowApi.getList 获取流程列表
       // 注意：如果需要过滤 status=active，可能需要后端接口支持该参数
       // 拦截器会自动从 localStorage 的 'workflow_ctl_api_key' 读取 API Key
-      const result = await workflowApi.getList({ 
+      const result: any = await workflowApi.getList({ 
         page: 1, 
         page_size: 100,
         // @ts-ignore - status 参数可能不在类型定义中，但后端可能支持

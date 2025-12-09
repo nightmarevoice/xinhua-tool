@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, Button, Select, Checkbox, InputNumber } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { 
   Settings,
   Brain,
@@ -441,7 +442,7 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
                   <Checkbox
                     
                     checked={modelTypeSelection.default}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleModelTypeChange('default', e.target.checked)}
+                    onChange={(e: CheckboxChangeEvent) => handleModelTypeChange('default', e.target.checked)}
                   />
                   <label className="flex items-center ml-2 space-x-2 cursor-pointer">
                     <Brain className="w-4 h-4 text-blue-500 " />
@@ -473,7 +474,7 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
                 <div className="flex items-center space-x-3 mb-3">
                   <Checkbox
                     checked={modelTypeSelection.vision}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleModelTypeChange('vision', e.target.checked)}
+                    onChange={(e: CheckboxChangeEvent) => handleModelTypeChange('vision', e.target.checked)}
                   />
                   <label className="flex items-center ml-2 space-x-2 cursor-pointer">
                     <Eye className="w-4 h-4 text-purple-500" />
@@ -628,7 +629,7 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
                   <Form.Item>
                     <Checkbox
                       checked={config.supports_function_calling}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateModelConfiguration(index, 'supports_function_calling', e.target.checked)}
+                      onChange={(e: CheckboxChangeEvent) => updateModelConfiguration(index, 'supports_function_calling', e.target.checked)}
                     >
                       支持函数调用
                     </Checkbox>

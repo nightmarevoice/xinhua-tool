@@ -97,7 +97,7 @@ const WorkflowPage: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await workflowApi.getList()
+      const response: any = await workflowApi.getList()
       setData(response.data.items)
     } catch (error) {
       message.error('获取数据失败')

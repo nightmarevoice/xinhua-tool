@@ -6,8 +6,6 @@ import {
   FileTextOutlined,
   SettingOutlined,
   ExperimentOutlined,
-  SettingOutlined,
-  ExperimentOutlined,
   SafetyOutlined,
   HistoryOutlined
 } from '@ant-design/icons'
@@ -18,7 +16,6 @@ import WorkflowPage from '../pages/workflow/WorkflowPage'
 import PromptPage from '../pages/prompt/PromptPage'
 import ModelPage from '../pages/model/ModelPage'
 import ChatTestPage from '../pages/ChatTestPage'
-import SecurityCenterPage from '../pages/security/SecurityCenterPage'
 import SecurityCenterPage from '../pages/security/SecurityCenterPage'
 import ChatLogPage from '../pages/ChatLogPage'
 import Login from '../pages/Login'

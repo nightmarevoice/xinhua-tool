@@ -2,7 +2,6 @@ import axios from 'axios'
 import type {
   ApiResponse,
   PaginatedResponse,
-  PaginatedData,
   ApiKey,
   CreateApiKeyRequest,
   UpdateApiKeyRequest,
@@ -94,7 +93,7 @@ export const apiKeyApi = {
 export const workflowApi = {
   // 获取流程列表
   getList: (params?: { page?: number; page_size?: number; search?: string; type?: string }) =>
-    api.get('/workflows/list', { params }) as Promise<PaginatedData<Workflow>>,
+    api.get<PaginatedResponse<Workflow>>('/workflows/list', { params }),
 
   // 获取单个流程
   getById: (id: string) =>
@@ -121,7 +120,7 @@ export const workflowApi = {
 export const promptApi = {
   // 获取Prompt列表
   getList: (params?: { page?: number; page_size?: number; search?: string; modelType?: string }) =>
-    api.get('/prompts/list', { params }) as Promise<PaginatedData<Prompt>>,
+    api.get<PaginatedResponse<Prompt>>('/prompts/list', { params }),
 
   // 获取单个Prompt
   getById: (id: string) =>
@@ -175,7 +174,7 @@ export const modelParameterApi = {
 export const llmProviderApi = {
   // 获取LLM Provider列表
   getList: (params?: { page?: number; page_size?: number; search?: string; provider?: string }) =>
-    api.get('/llm-providers/list', { params }) as Promise<PaginatedData<LLMProvider>>,
+    api.get<PaginatedResponse<LLMProvider>>('/llm-providers/list', { params }),
 
   // 获取单个LLM Provider
   getById: (id: number) =>
@@ -223,7 +222,7 @@ export const chatLogApi = {
 export const sensitiveWordApi = {
   // 获取敏感词组列表
   getList: (params?: { page?: number; page_size?: number; search?: string }) =>
-    api.get('/sensitive-words/list', { params }) as Promise<PaginatedData<SensitiveWordGroup>>,
+    api.get<PaginatedResponse<SensitiveWordGroup>>('/sensitive-words/list', { params }),
 
   // 获取单个敏感词组
   getById: (id: string) =>

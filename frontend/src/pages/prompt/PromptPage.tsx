@@ -121,7 +121,7 @@ const PromptPage: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await promptApi.getList()
+      const response: any = await promptApi.getList()
       setData(response.data.items)
     } catch (error) {
       message.error('获取数据失败')

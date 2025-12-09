@@ -63,7 +63,7 @@ const SecurityCenterPage: React.FC = () => {
       dataIndex: 'words',
       key: 'wordCount',
       width: 120,
-      align: 'center',
+      align: 'center' as const,
       render: (words: string[]) => words?.length || 0,
     },
     {
@@ -104,7 +104,7 @@ const SecurityCenterPage: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await sensitiveWordApi.getList()
+      const response: any = await sensitiveWordApi.getList()
       setData(response.data.items)
     } catch (error) {
       message.error('获取数据失败')
