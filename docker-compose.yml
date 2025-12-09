@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: xinhua-backend
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      - DATABASE_URL=${BACKEND_DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    volumes:
+      - ./backend/app.db:/app/app.db
+      - ./logs/backend:/app/logs
+    networks:
+      - xinhua-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  workflow-ctl:
+    build:
+      context: ./workflow-ctl
+      dockerfile: Dockerfile
+    container_name: xinhua-workflow-ctl
+    restart: unless-stopped
+    ports:
+      - "8889:8889"
+    environment:
+      - DATABASE_URL=${WORKFLOW_CTL_DATABASE_URL}
+      - PORT=8889
+      - HOST=0.0.0.0
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    volumes:
+      - ./workflow-ctl/data:/app/data
+      - ./logs/workflow-ctl:/app/logs
+    networks:
+      - xinhua-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8889/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: xinhua-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - workflow-ctl
+    networks:
+      - xinhua-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  xinhua-network:
+    driver: bridge
+
+volumes:
+  backend-db:
+  workflow-ctl-db:
+

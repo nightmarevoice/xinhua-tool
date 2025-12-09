@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: 运行 test_stream_api.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/workflow-ctl/test_stream_api.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/workflow-ctl",
+            "justMyCode": true,
+            "env": {
+                "PYTHONIOENCODING": "utf-8"
+            }
+        }
+    ]
+}
+
+
