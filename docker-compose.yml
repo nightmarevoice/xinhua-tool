@@ -63,7 +63,7 @@ services:
     container_name: xinhua-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8787:80"
     depends_on:
       - backend
       - workflow-ctl

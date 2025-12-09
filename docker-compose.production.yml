@@ -91,7 +91,7 @@ services:
     container_name: xinhua-frontend
     restart: always
     ports:
-      - "80:80"
+      - "8787:80"
       - "443:443"
     depends_on:
       backend:
