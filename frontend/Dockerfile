@@ -5,7 +5,6 @@ WORKDIR /app
 
 # 配置 npm 使用国内镜像源（加速下载）
 RUN npm config set registry https://registry.npmmirror.com && \
-    npm config set disturl https://npmmirror.com/dist && \
     npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass && \
     npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
     npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
