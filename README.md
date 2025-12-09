@@ -132,6 +132,77 @@ chmod +x start.sh
 - **数据库**: xinhua_dev
 - **用户名**: xuanfeng_dev
 
+## 从 GitHub 拉取代码到服务器
+
+项目提供了 3 个脚本用于在 Ubuntu 服务器上从 GitHub 拉取代码：
+
+- **`pull_from_github.sh`** - 功能完整版（推荐日常使用）
+- **`pull_github_simple.sh`** - 快速简化版
+- **`pull_from_github_secure.sh`** - 安全版本（推荐生产环境）
+
+### 快速开始
+
+#### 1. 修改配置
+
+编辑 `pull_from_github.sh`，修改以下变量：
+```bash
+REPO_OWNER="your-username"    # 改为你的 GitHub 用户名
+REPO_NAME="xinhua-tool"       # 改为你的仓库名
+```
+
+#### 2. 运行脚本
+
+```bash
+# 上传到服务器
+scp pull_from_github.sh ubuntu@server-ip:/home/ubuntu/
+
+# SSH 登录服务器后运行
+chmod +x pull_from_github.sh
+./pull_from_github.sh
+```
+
+代码会自动下载到 `/home/xinhua-tool` 目录。
+
+### 高级用法
+
+```bash
+# 通过参数指定配置
+./pull_from_github.sh your-username xinhua-tool /home/xinhua-tool main
+
+# 更新现有代码（再次运行即可）
+./pull_from_github.sh
+
+# 使用安全版本（通过环境变量）
+source ~/.github_token && ./pull_from_github_secure.sh
+```
+
+### 完整部署流程
+
+```bash
+# 1. 拉取代码
+./pull_from_github.sh
+
+# 2. 进入目录
+cd /home/xinhua-tool
+
+# 3. 部署应用
+./deploy.sh docker
+```
+
+### 自动化部署
+
+```bash
+# 设置定时任务（每天凌晨 2 点更新）
+crontab -e
+
+# 添加：
+0 2 * * * cd /home/ubuntu && ./pull_from_github.sh >> /var/log/github-pull.log 2>&1
+```
+
+更多详细信息请查看：
+- [GitHub 拉取代码使用说明](GitHub拉取代码说明.md) ⭐ 快速上手
+- [GitHub 拉取代码完整指南](GITHUB_PULL_GUIDE.md) - 完整文档
+
 ### 数据库迁移
 
 项目支持完整的数据库迁移功能，可以轻松地在不同环境间迁移数据。
@@ -184,8 +255,22 @@ ls -la db_backup_before_import_*/
 
 ## 文档
 
-- [API 文档](docs/API.md)
+### 部署相关
 - [部署指南](docs/DEPLOYMENT.md)
-- [数据库迁移指南](DATABASE_MIGRATION_GUIDE.md)
-- [数据库迁移快速参考](DB_MIGRATION_QUICK_REFERENCE.md)
 - [部署检查清单](DEPLOYMENT_CHECKLIST.md)
+
+### GitHub 代码拉取
+- [GitHub 拉取快速开始](QUICK_START_GITHUB_PULL.md) ⭐ 快速参考卡
+- [GitHub 拉取代码说明](GitHub拉取代码说明.md) ⭐ 中文指南
+- [GitHub 拉取完整指南](GITHUB_PULL_GUIDE.md) - 完整文档
+- [GitHub 拉取功能总结](GITHUB_PULL_SUMMARY.md) - 功能总结
+
+### 数据库相关
+- [数据库迁移使用说明](数据库迁移使用说明.md) ⭐ 中文指南
+- [数据库迁移完整指南](DATABASE_MIGRATION_GUIDE.md) - 完整文档
+- [数据库迁移快速参考](DB_MIGRATION_QUICK_REFERENCE.md) - 命令速查
+- [数据库迁移实战示例](DB_MIGRATION_EXAMPLES.md) - 8 个示例
+- [数据库迁移功能总结](DATABASE_MIGRATION_SUMMARY.md) - 功能总结
+
+### API 文档
+- [API 文档](docs/API.md)

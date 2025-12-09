@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Table, Card, Button, Drawer, Descriptions, Space } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { chatLogApi } from '../services/api'
-import ReactJson from 'react-json-view'
+import ReactJson from '@microlink/react-json-view'
 
 interface ChatLog {
     id: number

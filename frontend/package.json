@@ -18,7 +18,7 @@
     "lucide-react": "^0.546.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-json-view": "^1.21.3",
+    "@microlink/react-json-view": "^1.23.0",
     "react-router-dom": "^6.8.1"
   },
   "devDependencies": {
