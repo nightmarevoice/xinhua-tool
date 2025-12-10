@@ -5,81 +5,154 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+    image: xinhua-tool-backend:latest
     container_name: xinhua-backend
+    hostname: backend
     restart: unless-stopped
     ports:
       - "8888:8888"
     environment:
+      # 数据库配置 (阿里云 RDS)
       - DATABASE_URL=${BACKEND_DATABASE_URL}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      
+      # 安全配置
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-False}
+      
+      # CORS 配置
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      
+      # 其他配置
+      - TZ=${TZ:-Asia/Shanghai}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - ./backend/app.db:/app/app.db
+      # 日志持久化
       - ./logs/backend:/app/logs
+      # 备用本地数据库（使用 RDS 时可选）
+      - ./backend/app.db:/app/app.db
     networks:
-      - xinhua-network
+      xinhua-network:
+        aliases:
+          - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   workflow-ctl:
     build:
       context: ./workflow-ctl
       dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+    image: xinhua-tool-workflow-ctl:latest
     container_name: xinhua-workflow-ctl
+    hostname: workflow-ctl
     restart: unless-stopped
     ports:
       - "8889:8889"
     environment:
+      # 数据库配置 (阿里云 RDS)
       - DATABASE_URL=${WORKFLOW_CTL_DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # 服务配置
       - PORT=8889
       - HOST=0.0.0.0
+      
+      # CORS 配置
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      
+      # 其他配置
+      - TZ=${TZ:-Asia/Shanghai}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
+      # 数据目录持久化
       - ./workflow-ctl/data:/app/data
+      # 日志持久化
       - ./logs/workflow-ctl:/app/logs
     networks:
-      - xinhua-network
+      xinhua-network:
+        aliases:
+          - workflow-ctl
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8889/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8889/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+    image: xinhua-tool-frontend:latest
     container_name: xinhua-frontend
+    hostname: frontend
     restart: unless-stopped
     ports:
       - "8787:80"
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
     depends_on:
-      - backend
-      - workflow-ctl
+      backend:
+        condition: service_healthy
+      workflow-ctl:
+        condition: service_healthy
     networks:
-      - xinhua-network
+      xinhua-network:
+        aliases:
+          - frontend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   xinhua-network:
+    name: xinhua-tool_xinhua-network
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
 
 volumes:
-  backend-db:
-  workflow-ctl-db:
+  backend-logs:
+    driver: local
+  workflow-ctl-logs:
+    driver: local
 

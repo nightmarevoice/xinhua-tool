@@ -18,18 +18,17 @@ RUN npm config set fetch-retries 5 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-timeout 300000
 
-# 复制 package.json（不复制 package-lock.json，避免跨平台依赖问题）
+# 复制 package.json（单独复制，利用 Docker 缓存）
 COPY package.json .npmrc* ./
 
-# 清理 npm 缓存并安装依赖
-# 不使用 package-lock.json，让 npm 在容器内重新解析依赖
-# 这样可以避免 rollup 等包的平台特定依赖问题
-RUN npm cache clean --force && \
+# 安装依赖（利用 BuildKit 缓存挂载，加速构建）
+# --mount=type=cache 会在构建间保留 npm 缓存
+RUN --mount=type=cache,target=/root/.npm \
     rm -f package-lock.json && \
     npm install --legacy-peer-deps --verbose || \
     (echo "首次安装失败，重试..." && sleep 5 && npm install --legacy-peer-deps --verbose)
 
-# 复制源代码
+# 复制源代码（代码变化不会影响依赖层缓存）
 COPY . .
 
 # 构建应用
