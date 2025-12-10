@@ -2,7 +2,67 @@
 
 ## 🔧 常见问题及解决方案
 
-### 1. 网络冲突错误
+### 1. 容器名称冲突 ⚠️ 最常见
+
+**错误信息:**
+```
+Error response from daemon: Conflict. The container name "/xinhua-backend" is already in use by container "47ae078723b6...". You have to remove (or rename) that container to be able to reuse that name.
+```
+
+**原因:** 之前的容器没有完全清理，容器名称被占用
+
+**解决方案:**
+
+#### 方案 A: 使用自动修复脚本（推荐） ⭐
+```bash
+# Linux/Mac
+chmod +x fix-container-conflict.sh
+./fix-container-conflict.sh
+
+# Windows
+fix-container-conflict.bat
+
+# 然后重新部署
+./deploy.sh docker
+```
+
+脚本会自动：
+- ✅ 停止所有 xinhua 容器
+- ✅ 删除冲突的容器
+- ✅ 清理悬空容器
+- ✅ 清理相关网络
+- ✅ 显示清理结果
+
+#### 方案 B: 手动修复
+```bash
+# 1. 停止并删除所有容器
+docker-compose down
+docker rm -f $(docker ps -a -q --filter "name=xinhua")
+
+# 2. 清理网络
+docker network rm xinhua-tool_xinhua-network
+
+# 3. 重新部署
+./deploy.sh docker
+```
+
+#### 方案 C: 只删除特定容器
+```bash
+# 查看冲突容器
+docker ps -a --filter "name=xinhua-backend"
+
+# 删除特定容器（使用容器ID或名称）
+docker rm -f xinhua-backend
+# 或使用 ID
+docker rm -f 47ae078723b6
+
+# 重新部署
+./deploy.sh docker
+```
+
+---
+
+### 2. 网络冲突错误
 
 **错误信息:**
 ```
@@ -49,7 +109,53 @@ docker network rm xinhua-tool_xinhua-network
 
 ---
 
-### 2. version 字段过时警告
+### 2. 网络冲突错误
+
+**错误信息:**
+```
+Error response from daemon: error while removing network: network xinhua-tool_xinhua-network id xxx has active endpoints
+```
+
+**原因:** Docker 网络仍有容器端点连接，无法删除
+
+**解决方案:**
+
+#### 方案 A: 使用自动修复脚本（推荐）
+```bash
+chmod +x fix-container-conflict.sh
+./fix-container-conflict.sh
+```
+
+脚本会自动：
+- 停止所有项目容器
+- 断开网络连接
+- 删除旧网络
+- 清理悬空资源
+
+#### 方案 B: 手动修复
+```bash
+# 1. 停止所有容器
+docker-compose down
+
+# 2. 强制删除项目容器
+docker rm -f $(docker ps -a --filter "name=xinhua" -q)
+
+# 3. 查看网络连接
+docker network inspect xinhua-tool_xinhua-network
+
+# 4. 断开所有端点（替换 CONTAINER_NAME）
+docker network disconnect -f xinhua-tool_xinhua-network CONTAINER_NAME
+
+# 5. 删除网络
+docker network rm xinhua-tool_xinhua-network
+
+# 6. 重新部署
+./deploy.sh docker
+```
+
+---
+
+### 3. version 字段过时警告
 
 **警告信息:**
 ```
@@ -69,7 +175,7 @@ sed -i '/^version:/d' docker-compose.yml
 
 ---
 
-### 3. 端口占用
+### 4. 端口占用
 
 **错误信息:**
 ```
@@ -92,7 +198,7 @@ docker stop $(docker ps -q --filter "publish=8888")
 
 ---
 
-### 4. 镜像构建失败
+### 5. 镜像构建失败
 
 **解决方案:**
 ```bash
@@ -106,7 +212,7 @@ docker rmi xinhua-tool-frontend xinhua-tool-backend xinhua-tool-workflow-ctl
 
 ---
 
-### 5. 容器健康检查失败
+### 6. 容器健康检查失败
 
 **症状:** 容器启动后显示 unhealthy
 
@@ -127,7 +233,7 @@ curl http://localhost:8888/health
 
 ---
 
-### 6. 数据库连接失败
+### 7. 数据库连接失败
 
 **检查配置:**
 ```bash

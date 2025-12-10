@@ -191,27 +191,30 @@ cd /home/xinhua-tool
 
 ### 🔧 Docker 故障排查
 
-如果部署遇到问题（网络冲突、端口占用等），使用快速修复工具：
+如果部署遇到问题（容器冲突、网络冲突、端口占用等），使用快速修复工具：
 
 ```bash
-# 查看快速修复指南
-chmod +x docker-quick-fix.sh
-./docker-quick-fix.sh
-
-# 自动修复网络冲突
-chmod +x fix-docker-network.sh
-./fix-docker-network.sh
-
-# 然后重新部署
+# 🚑 一键修复 90% 的问题
+chmod +x fix-container-conflict.sh
+./fix-container-conflict.sh
 ./deploy.sh docker
 ```
 
-常见问题：
-- ❌ `network has active endpoints` → 运行 `./fix-docker-network.sh`
-- ⚠️  `version is obsolete` → 已自动修复（最新代码）
-- 🔥 `address already in use` → 查看 `./docker-quick-fix.sh` 中的解决方案
+**Windows 用户：**
+```powershell
+.\fix-container-conflict.bat
+bash deploy.sh docker
+```
 
-详细文档：[Docker 故障排查指南](DOCKER_TROUBLESHOOTING.md)
+常见错误及快速解决：
+- ❌ **容器名称冲突** (`container name is already in use`) → 运行 `./fix-container-conflict.sh`
+- ❌ **网络冲突** (`network has active endpoints`) → 运行 `./fix-container-conflict.sh`
+- 🔥 **端口占用** (`address already in use`) → 查看下方文档
+- ⚠️  **version 过时** (`version is obsolete`) → 已自动修复（最新代码）
+
+快速参考文档：
+- 🚑 [Docker 快速修复卡片](DOCKER_QUICK_FIX.md) ⭐ **最快解决方案**
+- 📖 [Docker 完整故障排查](DOCKER_TROUBLESHOOTING.md) - 详细指南
 
 ### 自动化部署
 
@@ -282,7 +285,10 @@ ls -la db_backup_before_import_*/
 ### 部署相关
 - [部署指南](docs/DEPLOYMENT.md)
 - [部署检查清单](DEPLOYMENT_CHECKLIST.md)
-- [Docker 故障排查](DOCKER_TROUBLESHOOTING.md) ⭐ 问题修复指南
+
+### Docker 故障排查
+- 🚑 [Docker 快速修复卡片](DOCKER_QUICK_FIX.md) ⭐ **一句话解决**
+- 📖 [Docker 完整故障排查](DOCKER_TROUBLESHOOTING.md) - 详细指南
 
 ### GitHub 代码拉取
 - [GitHub 拉取快速开始](QUICK_START_GITHUB_PULL.md) ⭐ 快速参考卡
@@ -299,3 +305,4 @@ ls -la db_backup_before_import_*/
 
 ### API 文档
 - [API 文档](docs/API.md)
+
