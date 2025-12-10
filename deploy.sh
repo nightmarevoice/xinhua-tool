@@ -231,10 +231,25 @@ if [ "$DEPLOY_METHOD" = "docker" ]; then
     fi
     echo ""
     
-    # 停止旧容器
+    # 停止旧容器并清理网络
     log_info "停止旧容器..."
-    docker-compose down || true
-    log_success "旧容器已停止"
+    docker-compose down 2>/dev/null || true
+    
+    # 清理可能存在的网络冲突
+    NETWORK_NAME="xinhua-tool_xinhua-network"
+    if docker network ls --filter "name=${NETWORK_NAME}" -q | grep -q .; then
+        log_info "清理旧网络..."
+        # 获取所有连接的容器并断开
+        NETWORK_ID=$(docker network ls --filter "name=${NETWORK_NAME}" -q)
+        if [ -n "$NETWORK_ID" ]; then
+            CONNECTED=$(docker network inspect "$NETWORK_ID" --format '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null || echo "")
+            for container in $CONNECTED; do
+                docker network disconnect -f "$NETWORK_NAME" "$container" 2>/dev/null || true
+            done
+            docker network rm "$NETWORK_NAME" 2>/dev/null || true
+        fi
+    fi
+    log_success "旧容器已停止，网络已清理"
     echo ""
     
     # 清理旧镜像（可选）

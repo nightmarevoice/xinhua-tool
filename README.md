@@ -189,6 +189,30 @@ cd /home/xinhua-tool
 ./deploy.sh docker
 ```
 
+### 🔧 Docker 故障排查
+
+如果部署遇到问题（网络冲突、端口占用等），使用快速修复工具：
+
+```bash
+# 查看快速修复指南
+chmod +x docker-quick-fix.sh
+./docker-quick-fix.sh
+
+# 自动修复网络冲突
+chmod +x fix-docker-network.sh
+./fix-docker-network.sh
+
+# 然后重新部署
+./deploy.sh docker
+```
+
+常见问题：
+- ❌ `network has active endpoints` → 运行 `./fix-docker-network.sh`
+- ⚠️  `version is obsolete` → 已自动修复（最新代码）
+- 🔥 `address already in use` → 查看 `./docker-quick-fix.sh` 中的解决方案
+
+详细文档：[Docker 故障排查指南](DOCKER_TROUBLESHOOTING.md)
+
 ### 自动化部署
 
 ```bash
@@ -258,6 +282,7 @@ ls -la db_backup_before_import_*/
 ### 部署相关
 - [部署指南](docs/DEPLOYMENT.md)
 - [部署检查清单](DEPLOYMENT_CHECKLIST.md)
+- [Docker 故障排查](DOCKER_TROUBLESHOOTING.md) ⭐ 问题修复指南
 
 ### GitHub 代码拉取
 - [GitHub 拉取快速开始](QUICK_START_GITHUB_PULL.md) ⭐ 快速参考卡

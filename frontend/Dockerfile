@@ -3,14 +3,6 @@ FROM node:18-slim AS builder
 
 WORKDIR /app
 
-# 配置 npm 使用国内镜像源（加速下载）
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass && \
-    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
-    npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
-    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
-    npm config set sharp_binary_host https://npmmirror.com/mirrors/sharp && \
-    npm config set sharp_libvips_binary_host https://npmmirror.com/mirrors/sharp-libvips
 
 # 配置 npm 网络参数（提高稳定性）
 RUN npm config set fetch-retries 5 && \
