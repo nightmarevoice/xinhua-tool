@@ -220,7 +220,7 @@ const ChatTestPage: React.FC = () => {
       }
       
       // 直接调用流式接口
-      const response = await fetch('http://192.168.1.2:8889/api/chat/stream', {
+      const response = await fetch('http://localhost:8889/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

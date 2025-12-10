@@ -6,7 +6,7 @@
 # ==================== 外部服务配置 ====================
 
 # 代理服务配置
-PROXY_BASE_URL = "http://185.216.21.215:35287"
+PROXY_BASE_URL = "http://185.216.21.215:21284"
 PROXY_API_KEY = "xuanfeng_sdfasdfsdfkkllli8i3"
 
 # 违禁词服务配置（使用同一个代理服务）
