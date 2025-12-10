@@ -2,7 +2,52 @@
 
 ## 🔧 常见问题及解决方案
 
-### 1. 容器名称冲突 ⚠️ 最常见
+### 0. 数据库连接失败 🔥 新增 - 最关键
+
+**错误信息:**
+```
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) 
+(2003, "Can't connect to MySQL server on 'localhost' ([Errno 111] Connection refused)")
+```
+
+**原因:** 
+- 缺少 `.env` 文件
+- Docker Compose 无法读取数据库配置
+- Backend 默认使用 `localhost`，但容器内没有 MySQL
+
+**快速解决:**
+
+```bash
+# 一键修复（90% 有效）
+cp env.example .env
+docker-compose down
+docker-compose up -d
+```
+
+**使用自动修复脚本:**
+```bash
+# Linux/Mac
+chmod +x fix-database-connection.sh
+./fix-database-connection.sh
+
+# Windows
+fix-database-connection.bat
+```
+
+**验证修复:**
+```bash
+# 检查容器日志
+docker-compose logs backend | grep -i "database\|connect"
+
+# 测试健康检查
+curl http://localhost:8888/health
+```
+
+**详细指南:** [DATABASE_CONNECTION_FIX.md](DATABASE_CONNECTION_FIX.md) 📖
+
+---
+
+### 1. 容器名称冲突 ⚠️ 常见
 
 **错误信息:**
 ```

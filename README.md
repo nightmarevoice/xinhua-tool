@@ -191,6 +191,28 @@ cd /home/xinhua-tool
 
 ### 🔧 Docker 故障排查
 
+#### 数据库连接失败 🔥 最关键
+
+如果看到数据库连接错误：
+```
+Can't connect to MySQL server on 'localhost'
+```
+
+**一键修复：**
+```bash
+cp env.example .env
+docker-compose down
+docker-compose up -d
+```
+
+**原因：** 缺少 `.env` 文件导致无法读取数据库配置
+
+**详细指南：** [DATABASE_CONNECTION_FIX.md](DATABASE_CONNECTION_FIX.md) ⭐
+
+---
+
+#### 容器/网络冲突
+
 如果部署遇到问题（容器冲突、网络冲突、端口占用等），使用快速修复工具：
 
 ```bash
@@ -207,13 +229,14 @@ bash deploy.sh docker
 ```
 
 常见错误及快速解决：
+- 🔥 **数据库连接失败** (`Can't connect to MySQL on localhost`) → 运行 `cp env.example .env`
 - ❌ **容器名称冲突** (`container name is already in use`) → 运行 `./fix-container-conflict.sh`
 - ❌ **网络冲突** (`network has active endpoints`) → 运行 `./fix-container-conflict.sh`
 - 🔥 **端口占用** (`address already in use`) → 查看下方文档
 - ⚠️  **version 过时** (`version is obsolete`) → 已自动修复（最新代码）
 
 快速参考文档：
-- 🚑 [Docker 快速修复卡片](DOCKER_QUICK_FIX.md) ⭐ **最快解决方案**
+- 🔥 [数据库连接修复](DATABASE_CONNECTION_FIX.md) ⭐ **最常见问题**
 - 📖 [Docker 完整故障排查](DOCKER_TROUBLESHOOTING.md) - 详细指南
 
 ### 自动化部署
@@ -287,8 +310,8 @@ ls -la db_backup_before_import_*/
 - [部署检查清单](DEPLOYMENT_CHECKLIST.md)
 
 ### Docker 故障排查
-- 🚑 [Docker 快速修复卡片](DOCKER_QUICK_FIX.md) ⭐ **一句话解决**
-- 📖 [Docker 完整故障排查](DOCKER_TROUBLESHOOTING.md) - 详细指南
+- 🔥 [数据库连接修复](DATABASE_CONNECTION_FIX.md) ⭐ **最常见问题**
+- 📖 [Docker 完整故障排查](DOCKER_TROUBLESHOOTING.md) - 所有问题汇总
 
 ### GitHub 代码拉取
 - [GitHub 拉取快速开始](QUICK_START_GITHUB_PULL.md) ⭐ 快速参考卡
