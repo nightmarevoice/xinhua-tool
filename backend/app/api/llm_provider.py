@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
 from datetime import datetime
+import logging
 
 from app.database import get_db
 from app.models.llm_provider import LLMProvider as LLMProviderModel
@@ -10,6 +11,9 @@ from app.schemas.llm_provider import LLMProvider, LLMProviderCreate, LLMProvider
 from app.schemas.common import PaginatedResponse, ApiResponse
 from app.utils.response import error_response, success_response, not_found_error
 from app.utils.workflow_ctl_sync import sync_llm_provider_to_workflow_ctl, delete_from_workflow_ctl
+from app.utils.crypto import encrypt_api_key, mask_api_key, is_encrypted
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -38,8 +42,14 @@ async def get_llm_providers(
     
     from app.schemas.common import PaginatedData
     
-    # 将SQLAlchemy模型转换为Pydantic模型
-    llm_providers = [LLMProvider.from_orm(item) for item in items]
+    # 将SQLAlchemy模型转换为Pydantic模型，并对 API 密钥进行脱敏
+    llm_providers = []
+    for item in items:
+        provider = LLMProvider.from_orm(item)
+        # 脱敏显示 API 密钥
+        if provider.api_key:
+            provider.api_key = mask_api_key(provider.api_key)
+        llm_providers.append(provider)
     
     return PaginatedResponse[LLMProvider](
         data=PaginatedData[LLMProvider](
@@ -59,6 +69,9 @@ async def get_llm_provider(provider_id: int = Query(..., description="Provider I
     
     # 将SQLAlchemy模型转换为Pydantic模型
     provider_schema = LLMProvider.from_orm(provider)
+    # 脱敏显示 API 密钥
+    if provider_schema.api_key:
+        provider_schema.api_key = mask_api_key(provider_schema.api_key)
     return success_response("获取LLM Provider成功", provider_schema)
 
 @router.post("/create", response_model=ApiResponse)
@@ -69,10 +82,13 @@ async def create_llm_provider(provider: LLMProviderCreate, db: Session = Depends
     if provider.model_configurations:
         model_configs = [config.dict() for config in provider.model_configurations]
     
+    # 加密 API 密钥
+    encrypted_api_key = encrypt_api_key(provider.api_key) if provider.api_key else None
+    
     db_provider = LLMProviderModel(
         name=provider.name,
         provider=provider.provider,
-        api_key=provider.api_key,
+        api_key=encrypted_api_key,  # 存储加密后的密钥
         api_base=provider.api_base,
         api_version=provider.api_version,
         custom_config=provider.custom_config,
@@ -144,6 +160,15 @@ async def update_llm_provider(
                 else:
                     configs.append(dict(config))
             update_data['model_configurations'] = configs
+    
+    # 处理 API 密钥的加密
+    if 'api_key' in update_data and update_data['api_key']:
+        # 如果 API 密钥不是脱敏格式（包含****），则是新密钥需要加密
+        if '****' not in update_data['api_key']:
+            update_data['api_key'] = encrypt_api_key(update_data['api_key'])
+        else:
+            # 如果是脱敏格式，说明前端没有修改，保持原值不变
+            update_data.pop('api_key')
     
     for field, value in update_data.items():
         setattr(db_provider, field, value)

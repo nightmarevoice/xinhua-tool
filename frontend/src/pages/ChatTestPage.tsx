@@ -175,17 +175,14 @@ const ChatTestPage: React.FC = () => {
     abortControllerRef.current = new AbortController()
 
     try {
-      // 处理用户消息：如果选择了文风，则拼接文风特点
-      let userMessage = values.user_message || ''
-      if (values.writing_style) {
-        const selectedStyle = WRITING_STYLES.find(s => s.style === values.writing_style)
-        if (selectedStyle) {
-          userMessage = `${userMessage},| 文风: ${values.writing_style} | 核心特点：${selectedStyle.features}`
-        }
+      // 构建请求数据
+      const requestData: any = {
+        user_message: values.user_message || '',
       }
 
-      const requestData: any = {
-        user_message: userMessage,
+      // 如果选择了文风，作为参数传递给后端
+      if (values.writing_style) {
+        requestData.writing_style = values.writing_style
       }
 
       // 添加 workflowId（必填）
@@ -220,7 +217,7 @@ const ChatTestPage: React.FC = () => {
       }
       
       // 直接调用流式接口
-      const response = await fetch('http://localhost:8889/api/chat/stream', {
+      const response = await fetch('http://69.5.14.25:8889/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

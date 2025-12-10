@@ -17,6 +17,7 @@ from app.schemas.workflow import Workflow as WorkflowSchema
 from app.schemas.llm_provider import LLMProvider as LLMProviderSchema
 from app.middleware.auth import verify_api_key_dependency
 from app.config import PROXY_BASE_URL, PROXY_API_KEY, PROXY_LOGS_URL
+from app.utils.crypto import decrypt_api_key
 from pydantic import BaseModel
 
 # 配置日志
@@ -26,10 +27,66 @@ router = APIRouter()
 
 PROXY_URL = f"{PROXY_BASE_URL}/v1/chat/completions"
 
+# 文风选项数据（与前端保持一致）
+WRITING_STYLES = [
+    {
+        "style": "政务通报/汇报体",
+        "features": "语言严谨、结构规范、逻辑清晰、用词精准、客观陈述",
+    },
+    {
+        "style": "内部参阅/简报体",
+        "features": "观点鲜明、分析深刻、篇幅精炼、问题导向、数据支撑",
+    },
+    {
+        "style": "领导讲话/发言稿体",
+        "features": "结构庄重、气势恢宏、号召力强、排比对偶多",
+    },
+    {
+        "style": "权威评论体 (新华时评风)",
+        "features": "高屋建瓴、观点鲜明、论证有力、引导舆论",
+    },
+    {
+        "style": "深度报道/调查体",
+        "features": "叙事完整、细节丰富、逻辑严密、背景深远",
+    },
+    {
+        "style": "标准消息/通稿体",
+        "features": "要素齐全（5W1H）、客观中立、倒金字塔结构",
+    },
+    {
+        "style": "新闻特写/人物通讯体",
+        "features": "情感饱满、描写生动、故事性强、见微知著",
+    },
+    {
+        "style": "宏观经济报道体",
+        "features": "(分析) 全局视角、数据驱动、政策敏感、趋势研判",
+    },
+    {
+        "style": "社会民生报道体",
+        "features": "(关怀) 问题导向、政策关联、人文温度、建设性",
+    },
+    {
+        "style": "红色纪念/党史评论体",
+        "features": "(论述) 以史鉴今、价值提炼、思想引领、语言庄重",
+    },
+    {
+        "style": "新媒体解读/划重点体",
+        "features": "通俗易懂、口语化表达、善用问答和比喻、逻辑清晰",
+    },
+    {
+        "style": "数据新闻/图解文案体",
+        "features": "语言精炼、数据驱动、结论清晰、适合可视化呈现",
+    },
+]
+
+# 创建文风映射字典，便于快速查找
+WRITING_STYLES_MAP = {item["style"]: item["features"] for item in WRITING_STYLES}
+
 class ChatRequest(BaseModel):
     """聊天请求模型"""
     user_message: str  # 用户消息
     workflowId: Optional[str] = None  # workflow ID（可选，如果提供则使用对应的 workflow）
+    writing_style: Optional[str] = None  # 文风（可选）
 
 
 def generate_sse_event(data: Dict[str, Any], event: str = "message") -> str:
@@ -271,13 +328,31 @@ async def stream_chat(
     try:
         user_message = request.user_message
         workflow_id = request.workflowId
+        writing_style = request.writing_style
+        
         logger.info(f"收到用户消息: {user_message[:100]}...")
         logger.info(f"workflowId: {workflow_id}")
+        logger.info(f"writing_style: {writing_style}")
         
-        # 解析文风信息
-        writing_style_info = parse_writing_style(user_message)
-        if writing_style_info:
-            logger.info(f"解析到文风信息: {writing_style_info}")
+        # 如果传递了 writing_style 参数，在后端完成拼接
+        writing_style_info = None
+        if writing_style:
+            features = WRITING_STYLES_MAP.get(writing_style)
+            if features:
+                # 拼接文风信息到 user_message
+                user_message = f"{user_message},| {writing_style} | 核心特点：{features}"
+                writing_style_info = {
+                    "writing_style": writing_style,
+                    "features": features
+                }
+                logger.info(f"已拼接文风信息: {writing_style_info}")
+            else:
+                logger.warning(f"未找到 writing_style={writing_style} 的核心特点配置")
+        else:
+            # 兼容旧的解析方式（从 user_message 中解析）
+            writing_style_info = parse_writing_style(user_message)
+            if writing_style_info:
+                logger.info(f"从消息中解析到文风信息: {writing_style_info}")
         
         # 初始化日志信息
         start_time = time.time()
@@ -350,7 +425,8 @@ async def stream_chat(
             user_content = user_prompt_template.replace("{user_message}", user_message)
             
             api_base = proprietary_provider.api_base
-            api_key_value = proprietary_provider.api_key
+            # 解密 API 密钥
+            api_key_value = decrypt_api_key(proprietary_provider.api_key) if proprietary_provider.api_key else ""
             model_name = proprietary_provider.default_model_name
             
             # 获取 temperature
@@ -458,10 +534,13 @@ async def stream_chat(
             
             # 调用专有模型（非流式）
             try:
+                # 解密专有模型的 API 密钥
+                proprietary_api_key = decrypt_api_key(proprietary_provider.api_key) if proprietary_provider.api_key else ""
+                
                 proprietary_result = call_llm_non_stream(
                     messages=proprietary_messages,
                     api_base=proprietary_provider.api_base,
-                    api_key=proprietary_provider.api_key,
+                    api_key=proprietary_api_key,
                     model=proprietary_provider.default_model_name,
                     temperature=proprietary_temperature
                 )
@@ -508,12 +587,15 @@ async def stream_chat(
                 general_params["writing_features"] = writing_style_info.get("features", "")
             log_info["general_params"] = general_params
             
+            # 解密通用模型的 API 密钥
+            general_api_key = decrypt_api_key(general_provider.api_key) if general_provider.api_key else ""
+            
             # 返回流式响应
             return StreamingResponse(
                 stream_chat_response(
                     messages=general_messages,
                     api_base=general_provider.api_base,
-                    api_key=general_provider.api_key,
+                    api_key=general_api_key,
                     model=general_provider.default_model_name,
                     temperature=general_temperature,
                     log_info=log_info

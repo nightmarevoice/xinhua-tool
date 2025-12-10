@@ -88,6 +88,10 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // 保存原始的脱敏密钥，用于判断用户是否修改了密钥
+  const [originalMaskedApiKey, setOriginalMaskedApiKey] = useState<string>('');
+  const [apiKeyModified, setApiKeyModified] = useState(false);
+  
   // 修改：模型类型选择状态，至少选择一个
   const [modelTypeSelection, setModelTypeSelection] = useState<{
     default: boolean;
@@ -109,6 +113,12 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
         is_default_vision_provider: provider.is_default_vision_provider || false,
       });
       
+      // 保存原始的脱敏密钥，用于后续判断用户是否修改了密钥
+      if (provider.api_key) {
+        setOriginalMaskedApiKey(provider.api_key);
+      }
+      setApiKeyModified(false);
+      
       // 根据现有数据设置模型类型选择
       setModelTypeSelection({
         default: !!provider.default_model_name,
@@ -118,6 +128,7 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
       // 调试：打印初始化数据
       console.log('编辑模式初始化数据:', {
         provider,
+        apiKey: provider.api_key?.includes('****') ? '脱敏密钥' : '明文密钥',
         modelTypeSelection: {
           default: !!provider.default_model_name,
           vision: !!provider.default_vision_model,
@@ -144,6 +155,9 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
         created_at: '',
         updated_at: '',
       });
+      
+      setOriginalMaskedApiKey('');
+      setApiKeyModified(false);
       
       setModelTypeSelection({
         default: true, // 创建时默认选择默认模型
@@ -263,15 +277,28 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
       }
     }
 
+    // 准备提交的数据
+    const submitData = { ...form };
+    
+    // 处理API密钥：如果是编辑模式且密钥未修改（脱敏格式），保持原值让后端识别
+    // 后端会检查是否包含****，如果包含则不更新密钥
+    if (mode === 'edit' && originalMaskedApiKey.includes('****') && !apiKeyModified) {
+      // 保持脱敏密钥，后端会识别并跳过更新
+      submitData.api_key = originalMaskedApiKey;
+    }
+    // 如果是新密钥或已修改的密钥，直接提交，后端会进行加密
+    
     // 调试：打印表单数据
     console.log('提交的表单数据:', {
-      ...form,
-      modelTypeSelection
+      ...submitData,
+      modelTypeSelection,
+      apiKeyModified: mode === 'edit' ? apiKeyModified : 'N/A',
+      apiKeyStatus: submitData.api_key?.includes('****') ? '脱敏（不更新）' : '明文（需加密）'
     });
 
     try {
       setLoading(true);
-      await onSave(form);
+      await onSave(submitData);
       onClose();
     } catch (error) {
       setError(error instanceof Error ? error.message : '保存失败');
@@ -358,11 +385,28 @@ const ProviderModal: React.FC<ProviderModalProps> = ({
                 label="API Key"
                 name="api_key"
                 initialValue={form.api_key}
+                extra={mode === 'edit' && originalMaskedApiKey.includes('****') && !apiKeyModified
+                  ? '当前显示的是脱敏后的密钥。如需修改，请输入新密钥。'
+                  : null
+                }
               >
                 <Input.Password 
-                  placeholder="输入API密钥"
+                  placeholder={mode === 'edit' && originalMaskedApiKey.includes('****')
+                    ? '保持原密钥不变或输入新密钥'
+                    : '输入API密钥'
+                  }
                   value={form.api_key || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm(prev => ({ ...prev, api_key: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const newValue = e.target.value;
+                    setForm(prev => ({ ...prev, api_key: newValue }));
+                    
+                    // 如果是编辑模式且有原始密钥，检查用户是否修改了密钥
+                    if (mode === 'edit' && originalMaskedApiKey) {
+                      // 如果用户输入了新内容（不等于原始脱敏密钥），标记为已修改
+                      setApiKeyModified(newValue !== originalMaskedApiKey && newValue !== '');
+                    }
+                  }}
+                  visibilityToggle={false}
                 />
               </Form.Item>
               
