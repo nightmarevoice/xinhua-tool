@@ -472,6 +472,9 @@ async def stream_chat(
                 ),
                 media_type="text/event-stream",
                 headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Methods": "*",
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
                     "X-Accel-Buffering": "no"
@@ -602,6 +605,9 @@ async def stream_chat(
                 ),
                 media_type="text/event-stream",
                 headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Methods": "*",
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
                     "X-Accel-Buffering": "no"
